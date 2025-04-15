@@ -1,63 +1,84 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Command } from "@tauri-apps/plugin-shell";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { Button, Form, Input, Select } from "antd";
+import { LazyStore } from "@tauri-apps/plugin-store";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const store = new LazyStore("settings.json");
+  const [downloading, setDownloading] = useState(false);
+  const [form] = Form.useForm();
+  const [stdout, setStdout] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
 
-  async function f2() {
-    Command.create("f2", ["dy", "-h"])
+  const onFinish = async (values: any) => {
+    await store.set("cookie", values.cookie);
+    setStdout("");
+    setDownloading(true);
+    Command.create("f2", [
+      "dy",
+      "-M",
+      values.mode,
+      "-u",
+      values.url,
+      "-p",
+      "~/Downloads",
+      "--cookie",
+      values.cookie,
+    ])
       .execute()
       .then((res) => {
-        console.log(res);
+        setStdout(res.stdout);
       })
       .catch((err) => {
         console.log(err);
+      })
+      .finally(() => {
+        setDownloading(false);
       });
-  }
+  };
+
+  useEffect(() => {
+    store.get("cookie").then((res) => {
+      form.setFieldValue("cookie", res);
+    });
+  }, []);
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="button" onClick={f2}>
-          F2
-        </button>
-      </form>
-      <p>{greetMsg}</p>
+    <main className="p-4">
+      <h1 className="text-2xl font-bold text-center">F2下载</h1>
+      <Form form={form} labelCol={{ span: 3 }} onFinish={onFinish}>
+        <Form.Item name={"cookie"} label="Cookie" rules={[{ required: true }]}>
+          <Input.TextArea placeholder="请输入Cookie" rows={4} />
+        </Form.Item>
+        <Form.Item name="mode" label="下载模式" rules={[{ required: true }]}>
+          <Select placeholder="请选择URL对应的下载模式" allowClear>
+            <Select.Option value="one">单个作品</Select.Option>
+            <Select.Option value="post">主页作品</Select.Option>
+            <Select.Option value="like">点赞作品</Select.Option>
+            <Select.Option value="collection">收藏作品</Select.Option>
+            <Select.Option value="collects">收藏夹作品</Select.Option>
+            <Select.Option value="music">收藏音乐</Select.Option>
+            <Select.Option value="mix">合集</Select.Option>
+            <Select.Option value="live">直播</Select.Option>
+          </Select>
+        </Form.Item>
+        <Form.Item
+          name={"url"}
+          label="链接"
+          rules={[
+            { required: true, type: "url", message: "请输入正确的URL地址" },
+          ]}
+        >
+          <Input placeholder="请输入链接" />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={downloading}>
+            F2下载
+          </Button>
+        </Form.Item>
+      </Form>
+      <pre>{stdout}</pre>
     </main>
   );
 }

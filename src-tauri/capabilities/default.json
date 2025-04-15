@@ -16,9 +16,14 @@
         {
           "name": "f2",
           "cmd": "f2",
-          "args": ["dy", "-h"]
+          "args": true
         }
       ]
-    }
+    },
+    "store:default",
+    "store:allow-get",
+    "store:allow-set",
+    "store:allow-save",
+    "store:allow-load"
   ]
 }
