@@ -1,53 +1,82 @@
 import { useEffect, useState } from "react";
 import { Command } from "@tauri-apps/plugin-shell";
+import { invoke } from "@tauri-apps/api/core";
 import { Button, Form, Input, Select } from "antd";
 import { LazyStore } from "@tauri-apps/plugin-store";
+import { info } from "@tauri-apps/plugin-log";
 import "./App.css";
 
 function App() {
   const store = new LazyStore("settings.json");
   const [downloading, setDownloading] = useState(false);
   const [form] = Form.useForm();
+  const [username, setUsername] = useState("");
   const [stdout, setStdout] = useState("");
-
 
   const onFinish = async (values: any) => {
     await store.set("cookie", values.cookie);
     setStdout("");
     setDownloading(true);
-    Command.create("f2", [
+    info(`start download ${values.mode} ${values.url}`);
+
+    const command = Command.create("f2", [
       "dy",
       "-M",
       values.mode,
       "-u",
       values.url,
       "-p",
-      "~/Downloads",
+      `/Users/${username}/Downloads`,
       "--cookie",
       values.cookie,
-    ])
-      .execute()
-      .then((res) => {
-        setStdout(res.stdout);
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .finally(() => {
-        setDownloading(false);
-      });
+    ]);
+
+    command.stdout.on("data", (line) => {
+      console.log("stdout data", line);
+      info(`stdout data ${line}`);
+      setStdout((prev) => prev + line);
+    });
+
+    command.stderr.on("data", (line) => {
+      setStdout((prev) => prev + "Error: " + line + "\n");
+    });
+
+    command.on("close", () => {
+      setDownloading(false);
+    });
+
+    command.on("error", (error) => {
+      console.error("Command error:", error);
+      setDownloading(false);
+    });
+    command.spawn();
   };
+
+  function getUsername() {
+    invoke<string>("get_system_username").then((res) => {
+      console.log(res);
+      setUsername(res);
+    });
+  }
 
   useEffect(() => {
     store.get("cookie").then((res) => {
       form.setFieldValue("cookie", res);
     });
+    getUsername();
   }, []);
 
   return (
     <main className="p-4">
-      <h1 className="text-2xl font-bold text-center">F2下载</h1>
-      <Form form={form} labelCol={{ span: 3 }} onFinish={onFinish}>
+      <h1 className="text-2xl font-bold text-center">
+        Hello {username} F2下载
+      </h1>
+      <Form
+        form={form}
+        labelCol={{ span: 3 }}
+        onFinish={onFinish}
+        disabled={downloading}
+      >
         <Form.Item name={"cookie"} label="Cookie" rules={[{ required: true }]}>
           <Input.TextArea placeholder="请输入Cookie" rows={4} />
         </Form.Item>
@@ -78,7 +107,9 @@ function App() {
           </Button>
         </Form.Item>
       </Form>
-      <pre>{stdout}</pre>
+      <pre className="mt-4 p-4 bg-gray-100 rounded-lg overflow-auto max-h-96">
+        {stdout}
+      </pre>
     </main>
   );
 }

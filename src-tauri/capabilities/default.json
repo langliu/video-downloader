@@ -20,10 +20,21 @@
         }
       ]
     },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "f2",
+          "cmd": "f2",
+          "args": true
+        }
+      ]
+    },
     "store:default",
     "store:allow-get",
     "store:allow-set",
     "store:allow-save",
-    "store:allow-load"
+    "store:allow-load",
+    "log:default"
   ]
 }
