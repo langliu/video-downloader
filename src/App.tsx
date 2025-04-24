@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { Button, Form, Input, Select } from "antd";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { info } from "@tauri-apps/plugin-log";
+// import { BaseDirectory, exists } from "@tauri-apps/plugin-fs";
 import "./App.css";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
     setStdout("");
     setDownloading(true);
     info(`start download ${values.mode} ${values.url}`);
+    // await exists(`/Users/${username}/Downloads`, {});
 
     const command = Command.create("f2", [
       "dy",
@@ -49,7 +51,7 @@ function App() {
       console.error("Command error:", error);
       setDownloading(false);
     });
-    command.spawn();
+    command.execute();
   };
 
   function getUsername() {

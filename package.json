@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "app:dev": "tauri dev",
-    "app:build": "tauri build --bundles app"
+    "app:build": "tauri build",
+    "app:build-debug": "tauri build --debug",
+    "app:build-dmg": "tauri build --bundles dmg",
+    "app:build-app": "tauri build --bundles app"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.4",

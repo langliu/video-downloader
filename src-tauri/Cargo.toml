@@ -26,3 +26,5 @@ tauri-plugin-shell = "2"
 tauri-plugin-store = "2"
 whoami = "1"
 tauri-plugin-log = "2"
+tauri-plugin-fs = "2"
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
