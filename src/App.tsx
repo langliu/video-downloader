@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Button, Form, Input, Space } from "antd";
+import { Button, Form, Input, Space, Table, Image } from "antd";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { open } from "@tauri-apps/plugin-dialog";
 import "./App.css";
+import { ParsedURL } from "./types";
 
 function App() {
   const store = new LazyStore("settings.json");
@@ -13,14 +14,7 @@ function App() {
   const [username, setUsername] = useState("");
   const [stdout, setStdout] = useState("");
   const [urls, setUrls] = useState<string[]>([]);
-  const [videoList, setVideoList] = useState<
-    {
-      cover: string;
-      desc: string;
-      music: string;
-      playAddr: string;
-    }[]
-  >([]);
+  const [videoList, setVideoList] = useState<ParsedURL[]>([]);
 
   /**
    * 解析视频地址，获取无水印视频信息
@@ -57,7 +51,6 @@ function App() {
         fileName,
       });
       console.log("res", result);
-      
     }
     console.log("dir", dir);
   }
@@ -70,10 +63,10 @@ function App() {
     if (dir) {
       for (const video of videoList) {
         await invoke("download_video", {
-        url:video.playAddr,
-        savePath: dir,
-        fileName:video.desc+'.mp4',
-      });
+          url: video.playAddr,
+          savePath: dir,
+          fileName: video.desc + ".mp4",
+        });
       }
       openPath(dir);
     }
@@ -120,7 +113,7 @@ function App() {
                 htmlType="button"
                 loading={downloading}
                 onClick={() => {
-                  batchDownload();                  
+                  batchDownload();
                 }}
               >
                 下载视频
@@ -129,6 +122,43 @@ function App() {
           </Space>
         </Form.Item>
       </Form>
+      <Table
+        dataSource={videoList}
+        columns={[
+          {
+            title: "标题",
+            dataIndex: "desc",
+            key: "desc",
+          },
+          
+          {
+            title: "封面",
+            dataIndex: "cover",
+            key: "cover",
+            render: (cover) => <Image src={cover} alt="cover"  width={100} />,
+            width: 100,
+          },
+          {
+            title: "操作",
+            key: "action",
+            render: (_, record) => (
+              <Button
+                type="link"
+                htmlType="button"
+                onClick={() => {
+                  downloadUrl(record.playAddr, record.desc + ".mp4");
+                }}
+              >
+                下载
+              </Button>
+            ),
+            width: 100,
+            align: "center",
+          },
+        ]}
+        rowKey={(record) => record.playAddr}
+        pagination={false}
+      />
       <pre className="mt-4 p-4 bg-gray-100 rounded-lg overflow-auto max-h-96">
         {stdout}
       </pre>
