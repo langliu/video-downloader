@@ -10,8 +10,9 @@ import './App.css'
 function App() {
   const store = new LazyStore('settings.json')
   const [downloading, setDownloading] = useState(false)
-  const [form] = Form.useForm()
   const [videoList, setVideoList] = useState<ParsedURL[]>([])
+  const [form] = Form.useForm<{ urls: string }>()
+  const urls = Form.useWatch('urls', form)
 
   /**
    * 解析视频地址，获取无水印视频信息
@@ -82,6 +83,7 @@ function App() {
       .map((url: string) => url.trim())
       .filter((url: string) => url)
     console.log(urlList)
+    setVideoList([])
     await store.set('urls', urls)
     await store.save()
     for (const url of urlList) {
@@ -97,7 +99,7 @@ function App() {
   useEffect(() => {
     store.get('urls').then((urls) => {
       if (urls) {
-        form.setFieldsValue({ urls })
+        form.setFieldsValue({ urls: urls as string })
       }
     })
     store.get('videoList').then((videoList) => {
@@ -107,6 +109,12 @@ function App() {
       }
     })
   }, [])
+
+  useEffect(() => {
+    store.set('urls', urls).then(() => {
+      store.save()
+    })
+  }, [urls, store])
 
   useEffect(() => {
     store.set('videoList', videoList).then(() => {
