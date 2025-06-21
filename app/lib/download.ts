@@ -45,15 +45,18 @@ export class VideoDownloader {
       // 更新下载状态
       this.updateProgress(videoId, 'downloading', 0)
 
-      const response = await fetch(videoUrl, {
+      // 通过 /api/video 接口下载视频
+      const response = await fetch('/api/video', {
+        body: JSON.stringify({ url: videoUrl }),
         headers: {
-          Accept: 'video/*',
+          'Content-Type': 'application/json',
         },
-        method: 'GET',
+        method: 'POST',
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.details || errorData.error || `HTTP error! status: ${response.status}`)
       }
 
       const contentLength = response.headers.get('content-length')

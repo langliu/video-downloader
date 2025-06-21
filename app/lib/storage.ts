@@ -9,7 +9,6 @@ interface VideoInfo {
   name: string
   cover: string
   videoUrl: string
-  originalUrl: string
   success: boolean
   error?: string
 }
@@ -21,7 +20,9 @@ export const storage = {
   // 清除缓存
   clear: () => {
     try {
-      localStorage.removeItem(STORAGE_KEY)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY)
+      }
     } catch (error) {
       console.warn('Failed to clear localStorage:', error)
     }
@@ -30,6 +31,9 @@ export const storage = {
   // 检查localStorage是否可用
   isAvailable: (): boolean => {
     try {
+      if (typeof window === 'undefined') {
+        return false
+      }
       const test = '__localStorage_test__'
       localStorage.setItem(test, test)
       localStorage.removeItem(test)
@@ -42,6 +46,9 @@ export const storage = {
   // 从localStorage加载数据
   load: (): CacheData | null => {
     try {
+      if (typeof window === 'undefined') {
+        return null
+      }
       const stored = localStorage.getItem(STORAGE_KEY)
       if (!stored) return null
 
@@ -62,6 +69,9 @@ export const storage = {
   // 保存数据到localStorage
   save: (urls: string, results: VideoInfo[]) => {
     try {
+      if (typeof window === 'undefined') {
+        return
+      }
       const data: CacheData = {
         results,
         timestamp: Date.now(),

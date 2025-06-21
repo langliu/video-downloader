@@ -3,7 +3,6 @@
 import {
   Download,
   DownloadCloud,
-  ExternalLink,
   FolderOpen,
   Loader2,
   Play,
@@ -16,7 +15,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { CacheStatus } from '@/components/cache-status'
 import { DownloadProgressModal } from '@/components/download-progress'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { UrlTooltip } from '@/components/url-tooltip'
 import { VideoDownloader } from '@/lib/download'
@@ -34,7 +40,6 @@ interface VideoInfo {
   name: string
   cover: string
   videoUrl: string
-  originalUrl: string
   success: boolean
   error?: string
 }
@@ -115,7 +120,6 @@ export default function VideoUrlProcessor() {
         cover: result.data.cover,
         id: videoId,
         name: result.data.desc || '未知视频',
-        originalUrl: url,
         success: true,
         videoUrl: result.data.playAddr,
       }
@@ -126,7 +130,6 @@ export default function VideoUrlProcessor() {
         error: error instanceof Error ? error.message : '未知错误',
         id: videoId,
         name: '获取失败',
-        originalUrl: url,
         success: false,
         videoUrl: '',
       }
@@ -174,13 +177,17 @@ export default function VideoUrlProcessor() {
 
   // 检查浏览器是否支持 File System Access API
   const isFileSystemAccessSupported = useMemo(() => {
+    if (!isMounted || typeof window === 'undefined') {
+      return false
+    }
+
     console.log(
       'isFileSystemAccessSupported',
       isMounted,
       typeof window !== 'undefined',
       'showDirectoryPicker' in window,
     )
-    return isMounted && typeof window !== 'undefined' && 'showDirectoryPicker' in window
+    return 'showDirectoryPicker' in window
   }, [isMounted])
 
   // 选择文件夹
@@ -196,8 +203,6 @@ export default function VideoUrlProcessor() {
       if (dirHandle) {
         setSelectedFolder(dirHandle)
         setFolderName(dirHandle.name)
-        console.log('选择的文件夹', dirHandle.name)
-        setError(`已选择下载文件夹: ${dirHandle.name}`)
       }
     } catch (error) {
       if (error instanceof Error && error.name !== 'AbortError') {
@@ -286,7 +291,6 @@ export default function VideoUrlProcessor() {
   }
 
   const validUrlCount = parseUrls(urls).length
-  const validUrls = getValidUrls(urls)
   const successfulVideos = results.filter((video) => video.success && video.videoUrl)
 
   return (
@@ -305,7 +309,7 @@ export default function VideoUrlProcessor() {
           <CardContent className='space-y-4'>
             <div className='space-y-2'>
               <Textarea
-                className='min-h-[120px] resize-none'
+                className='min-h-[120px] resize-none max-h-[200px]'
                 disabled={loading}
                 onChange={(e) => {
                   setUrls(e.target.value)
@@ -370,7 +374,7 @@ export default function VideoUrlProcessor() {
 
         {results.length > 0 && (
           <div className='space-y-4'>
-            <div className='flex items-center justify-between'>
+            <div className='flex items-center justify-between mt-4'>
               <h2 className='text-2xl font-semibold text-gray-900'>
                 视频信息结果 ({results.length})
               </h2>
@@ -466,68 +470,41 @@ export default function VideoUrlProcessor() {
                       </div>
                     )}
                     {video.success && video.videoUrl && (
-                      <div className='absolute inset-0 hover:bg-black/30 transition-all duration-200 flex items-center justify-center'>
-                        <Play className='text-white opacity-0 hover:opacity-100 transition-opacity h-12 w-12' />
-                      </div>
+                      <a
+                        className='absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 flex items-center justify-center group cursor-pointer'
+                        href={video.videoUrl}
+                        rel='noopener noreferrer'
+                        target='_blank'
+                        title='播放视频'
+                      >
+                        <div className='bg-white/20 rounded-full p-3 group-hover:scale-110 transition-transform duration-200'>
+                          <Play className='text-white h-8 w-8' />
+                        </div>
+                      </a>
                     )}
                   </div>
-                  <CardContent className='p-4'>
-                    <h3 className='font-semibold text-lg mb-2 line-clamp-2'>{video.name}</h3>
-                    {video.success ? (
-                      <div className='space-y-2 text-sm'>
-                        <div>
-                          <span className='text-gray-500'>原始URL:</span>
-                          <a
-                            className='ml-1 text-blue-600 hover:text-blue-800 inline-flex items-center'
-                            href={video.originalUrl}
-                            rel='noopener noreferrer'
-                            target='_blank'
-                          >
-                            查看原页面
-                            <ExternalLink className='ml-1 h-3 w-3' />
-                          </a>
-                        </div>
-                        {video.videoUrl && (
-                          <div>
-                            <span className='text-gray-500'>视频地址:</span>
-                            <a
-                              className='ml-1 text-blue-600 hover:text-blue-800 inline-flex items-center'
-                              href={video.videoUrl}
-                              rel='noopener noreferrer'
-                              target='_blank'
-                            >
-                              播放视频
-                              <Play className='ml-1 h-3 w-3' />
-                            </a>
-                          </div>
-                        )}
-                        <div className='pt-2'>
-                          <Button
-                            className='w-full bg-blue-600 hover:bg-blue-700 text-white'
-                            disabled={singleDownloading.has(video.id)}
-                            onClick={() => handleSingleDownload(video)}
-                            size='sm'
-                          >
-                            {singleDownloading.has(video.id) ? (
-                              <>
-                                <Loader2 className='mr-2 h-3 w-3 animate-spin' />
-                                下载中...
-                              </>
-                            ) : (
-                              <>
-                                <Download className='mr-2 h-3 w-3' />
-                                下载视频
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className='text-red-600 text-sm'>
-                        <span className='font-medium'>错误:</span> {video.error}
-                      </div>
-                    )}
+                  <CardContent>
+                    <h3 className='font-medium text-base line-clamp-2'>{video.name}</h3>
                   </CardContent>
+                  <CardFooter>
+                    <Button
+                      className='w-full'
+                      disabled={singleDownloading.has(video.id)}
+                      onClick={() => handleSingleDownload(video)}
+                    >
+                      {singleDownloading.has(video.id) ? (
+                        <>
+                          <Loader2 className='mr-2 h-3 w-3 animate-spin' />
+                          下载中...
+                        </>
+                      ) : (
+                        <>
+                          <Download className='mr-2 h-3 w-3' />
+                          下载视频
+                        </>
+                      )}
+                    </Button>
+                  </CardFooter>
                 </Card>
               ))}
             </div>

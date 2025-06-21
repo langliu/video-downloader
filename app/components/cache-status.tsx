@@ -12,7 +12,6 @@ interface VideoInfo {
   name: string
   cover: string
   videoUrl: string
-  originalUrl: string
   success: boolean
   error?: string
 }
@@ -29,7 +28,7 @@ export function CacheStatus({ results, onClearCache }: CacheStatusProps) {
   useEffect(() => {
     setCacheAvailable(storage.isAvailable())
 
-    if (storage.isAvailable()) {
+    if (storage.isAvailable() && typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('video-url-processor-cache')
         if (stored) {
@@ -44,6 +43,8 @@ export function CacheStatus({ results, onClearCache }: CacheStatusProps) {
   }, [results])
 
   const exportCache = () => {
+    if (typeof window === 'undefined') return
+
     const cachedData = storage.load()
     if (cachedData) {
       const dataStr = JSON.stringify(cachedData, null, 2)
