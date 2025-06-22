@@ -1,3 +1,13 @@
+// 扩展 FileSystemDirectoryHandle 接口以包含权限方法
+declare global {
+  interface FileSystemDirectoryHandle {
+    queryPermission(descriptor: {
+      mode: 'read' | 'readwrite'
+    }): Promise<'granted' | 'denied' | 'prompt'>
+    requestPermission(descriptor: { mode: 'read' | 'readwrite' }): Promise<'granted' | 'denied'>
+  }
+}
+
 interface DownloadProgress {
   id: string
   name: string
@@ -39,6 +49,49 @@ export class VideoDownloader {
     window.URL.revokeObjectURL(downloadUrl)
   }
 
+  // 检查并请求文件夹权限
+  private async checkFolderPermission(folder: FileSystemDirectoryHandle): Promise<boolean> {
+    try {
+      // 检查当前权限
+      const permission = await folder.queryPermission({ mode: 'readwrite' })
+
+      if (permission === 'granted') {
+        return true
+      }
+
+      // 如果没有权限，尝试请求权限
+      const newPermission = await folder.requestPermission({ mode: 'readwrite' })
+      return newPermission === 'granted'
+    } catch (error) {
+      console.error('权限检查失败:', error)
+      return false
+    }
+  }
+
+  // 保存文件到指定文件夹
+  private async saveToFolder(blob: Blob, filename: string): Promise<boolean> {
+    if (!this.selectedFolder) return false
+
+    try {
+      // 检查权限
+      const hasPermission = await this.checkFolderPermission(this.selectedFolder)
+      if (!hasPermission) {
+        throw new Error('没有文件夹写入权限，请重新选择文件夹')
+      }
+
+      const fileHandle = await this.selectedFolder.getFileHandle(filename, {
+        create: true,
+      })
+      const writable = await fileHandle.createWritable()
+      await writable.write(blob)
+      await writable.close()
+      return true
+    } catch (error) {
+      console.error('保存到文件夹失败:', error)
+      return false
+    }
+  }
+
   // 下载单个视频
   async downloadVideo(videoUrl: string, fileName: string, videoId: string): Promise<boolean> {
     try {
@@ -56,7 +109,9 @@ export class VideoDownloader {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.details || errorData.error || `HTTP error! status: ${response.status}`)
+        throw new Error(
+          errorData.details || errorData.error || `HTTP error! status: ${response.status}`,
+        )
       }
 
       const contentLength = response.headers.get('content-length')
@@ -92,12 +147,10 @@ export class VideoDownloader {
       // 如果选择了文件夹且浏览器支持，则保存到指定文件夹
       if (this.selectedFolder && this.isFileSystemAccessSupported()) {
         try {
-          const fileHandle = await this.selectedFolder.getFileHandle(sanitizedFileName, {
-            create: true,
-          })
-          const writable = await fileHandle.createWritable()
-          await writable.write(blob)
-          await writable.close()
+          const saved = await this.saveToFolder(blob, sanitizedFileName)
+          if (!saved) {
+            throw new Error('保存到文件夹失败')
+          }
         } catch (error) {
           console.error('保存到文件夹失败:', error)
           // 如果保存到文件夹失败，回退到默认下载方式
