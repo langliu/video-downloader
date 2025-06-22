@@ -1,16 +1,6 @@
 interface CacheData {
   urls: string
-  results: VideoInfo[]
   timestamp: number
-}
-
-interface VideoInfo {
-  id: string
-  name: string
-  cover: string
-  videoUrl: string
-  success: boolean
-  error?: string
 }
 
 const STORAGE_KEY = 'video-url-processor-cache'
@@ -67,13 +57,12 @@ export const storage = {
     }
   },
   // 保存数据到localStorage
-  save: (urls: string, results: VideoInfo[]) => {
+  save: (urls: string) => {
     try {
       if (typeof window === 'undefined') {
         return
       }
       const data: CacheData = {
-        results,
         timestamp: Date.now(),
         urls,
       }

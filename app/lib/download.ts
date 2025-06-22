@@ -115,9 +115,17 @@ export class VideoDownloader {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(
-          errorData.details || errorData.error || `HTTP error! status: ${response.status}`,
-        )
+        const errorMessage =
+          errorData.details || errorData.error || `HTTP error! status: ${response.status}`
+        const suggestion = errorData.suggestion || ''
+
+        // 构建完整的错误信息
+        let fullErrorMessage = errorMessage
+        if (suggestion) {
+          fullErrorMessage += `\n建议: ${suggestion}`
+        }
+
+        throw new Error(fullErrorMessage)
       }
 
       const contentLength = response.headers.get('content-length')

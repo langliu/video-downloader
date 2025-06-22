@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
         stack: error.stack,
       })
 
+      // 超时错误
       if (error.name === 'AbortError') {
         return NextResponse.json(
           {
@@ -113,13 +114,45 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // 网络连接错误
       if (error.message.includes('fetch') || error.name === 'TypeError') {
+        let errorDetails = '网络请求失败'
+
+        // 检查具体的网络错误类型
+        if (error.cause) {
+          const cause = error.cause as any
+          if (cause.code === 'ECONNRESET') {
+            errorDetails = '连接被重置，可能是网络不稳定或服务器拒绝连接'
+          } else if (cause.code === 'UND_ERR_CONNECT_TIMEOUT') {
+            errorDetails = '连接超时，服务器可能不可达或网络延迟过高'
+          } else if (cause.code === 'ENOTFOUND') {
+            errorDetails = '域名解析失败，请检查URL是否正确'
+          } else if (cause.code === 'ECONNREFUSED') {
+            errorDetails = '连接被拒绝，服务器可能已关闭或防火墙阻止'
+          } else {
+            errorDetails = `网络错误: ${cause.code || cause.message || error.message}`
+          }
+        }
+
         return NextResponse.json(
           {
-            details: `无法访问指定的视频URL: ${error.message}`,
+            details: errorDetails,
             error: '网络请求失败',
+            suggestion: '请检查网络连接、URL是否正确，或稍后重试',
           },
           { status: 502 },
+        )
+      }
+
+      // DNS 解析错误
+      if (error.message.includes('ENOTFOUND') || error.message.includes('getaddrinfo')) {
+        return NextResponse.json(
+          {
+            details: '域名解析失败，请检查URL是否正确',
+            error: 'DNS解析失败',
+            suggestion: '请确认视频URL地址是否正确',
+          },
+          { status: 400 },
         )
       }
     }
@@ -128,6 +161,7 @@ export async function POST(request: NextRequest) {
       {
         details: error instanceof Error ? error.message : '未知错误',
         error: '服务器内部错误',
+        suggestion: '请稍后重试或联系管理员',
       },
       { status: 500 },
     )

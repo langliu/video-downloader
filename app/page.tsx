@@ -12,7 +12,6 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
-import { CacheStatus } from '@/components/cache-status'
 import { DownloadProgressModal } from '@/components/download-progress'
 import { Button } from '@/components/ui/button'
 import {
@@ -147,7 +146,6 @@ export default function VideoUrlProcessor() {
     const cachedData = storage.load()
     if (cachedData) {
       setUrls(cachedData.urls)
-      setResults(cachedData.results)
       setLastCacheTime(new Date(cachedData.timestamp).toLocaleString())
     }
 
@@ -159,9 +157,9 @@ export default function VideoUrlProcessor() {
   }, [])
 
   // 添加保存缓存的函数
-  const saveToCache = (urlsToSave: string, resultsToSave: VideoInfo[]) => {
+  const saveToCache = (urlsToSave: string) => {
     if (cacheAvailable) {
-      storage.save(urlsToSave, resultsToSave)
+      storage.save(urlsToSave)
       setLastCacheTime(new Date().toLocaleString())
     }
   }
@@ -236,7 +234,7 @@ export default function VideoUrlProcessor() {
       setResults(videoInfos)
 
       // 保存到缓存
-      saveToCache(urls, videoInfos)
+      saveToCache(urls)
 
       if (failCount > 0) {
         setError(`${successCount} 个成功，${failCount} 个失败`)
@@ -352,7 +350,7 @@ export default function VideoUrlProcessor() {
                   // 延迟保存输入内容到缓存
                   if (cacheAvailable) {
                     setTimeout(() => {
-                      storage.save(e.target.value, results)
+                      storage.save(e.target.value)
                     }, 1000) // 1秒后保存，避免频繁写入
                   }
                 }}
@@ -404,9 +402,6 @@ export default function VideoUrlProcessor() {
             </Button>
           </CardContent>
         </Card>
-
-        {/* 在输入Card后添加 */}
-        <CacheStatus onClearCache={clearCache} results={results} />
 
         {results.length > 0 && (
           <div className='space-y-4'>
