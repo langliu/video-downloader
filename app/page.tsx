@@ -258,6 +258,24 @@ export default function VideoUrlProcessor() {
     }
 
     if (downloader) {
+      // 在用户激活上下文中检查权限
+      if (selectedFolder && isFileSystemAccessSupported) {
+        try {
+          // 立即检查权限，确保在用户激活上下文中
+          const permission = await selectedFolder.queryPermission({ mode: 'readwrite' })
+          if (permission !== 'granted') {
+            const newPermission = await selectedFolder.requestPermission({ mode: 'readwrite' })
+            if (newPermission !== 'granted') {
+              console.warn('用户拒绝了文件夹权限，将使用默认下载方式')
+              setError('文件夹权限被拒绝，将使用默认下载方式')
+            }
+          }
+        } catch (error) {
+          console.warn('权限检查失败，将使用默认下载方式:', error)
+          setError('无法获取文件夹权限，将使用默认下载方式')
+        }
+      }
+
       // 设置下载文件夹
       downloader.setDownloadFolder(selectedFolder)
 
@@ -278,6 +296,24 @@ export default function VideoUrlProcessor() {
     setSingleDownloading((prev) => new Set(prev).add(video.id))
 
     try {
+      // 在用户激活上下文中检查权限
+      if (selectedFolder && isFileSystemAccessSupported) {
+        try {
+          // 立即检查权限，确保在用户激活上下文中
+          const permission = await selectedFolder.queryPermission({ mode: 'readwrite' })
+          if (permission !== 'granted') {
+            const newPermission = await selectedFolder.requestPermission({ mode: 'readwrite' })
+            if (newPermission !== 'granted') {
+              console.warn('用户拒绝了文件夹权限，将使用默认下载方式')
+              setError('文件夹权限被拒绝，将使用默认下载方式')
+            }
+          }
+        } catch (error) {
+          console.warn('权限检查失败，将使用默认下载方式:', error)
+          setError('无法获取文件夹权限，将使用默认下载方式')
+        }
+      }
+
       // 设置下载文件夹
       downloader.setDownloadFolder(selectedFolder)
       await downloader.downloadVideo(video.videoUrl, video.name, video.id)

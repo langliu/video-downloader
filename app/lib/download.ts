@@ -60,10 +60,15 @@ export class VideoDownloader {
       }
 
       // 如果没有权限，尝试请求权限
+      // 注意：这必须在用户激活上下文中调用
       const newPermission = await folder.requestPermission({ mode: 'readwrite' })
       return newPermission === 'granted'
     } catch (error) {
       console.error('权限检查失败:', error)
+      // 如果是权限错误，返回 false 让程序回退到默认下载
+      if (error instanceof Error && error.name === 'SecurityError') {
+        return false
+      }
       return false
     }
   }
@@ -76,7 +81,8 @@ export class VideoDownloader {
       // 检查权限
       const hasPermission = await this.checkFolderPermission(this.selectedFolder)
       if (!hasPermission) {
-        throw new Error('没有文件夹写入权限，请重新选择文件夹')
+        console.warn('没有文件夹写入权限，将使用默认下载方式')
+        return false
       }
 
       const fileHandle = await this.selectedFolder.getFileHandle(filename, {
