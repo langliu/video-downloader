@@ -1,6 +1,8 @@
 'use client'
 
 import {
+  CheckCircle,
+  Clock,
   Download,
   DownloadCloud,
   FolderOpen,
@@ -10,25 +12,14 @@ import {
   RotateCcw,
   Trash2,
   X,
-  CheckCircle,
-  Clock,
   XCircle,
 } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
-
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { UrlTooltip } from '@/components/url-tooltip'
-import { VideoDownloader } from '@/lib/download'
-import { storage } from '@/lib/storage'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 import {
   Table,
   TableBody,
@@ -37,8 +28,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
+import { UrlTooltip } from '@/components/url-tooltip'
+import { VideoDownloader } from '@/lib/download'
+import { storage } from '@/lib/storage'
 
 // 扩展 Window 接口以包含 File System Access API
 declare global {
@@ -274,9 +267,13 @@ export default function VideoUrlProcessor() {
       if (selectedFolder && isFileSystemAccessSupported) {
         try {
           // 立即检查权限，确保在用户激活上下文中
-          const permission = await selectedFolder.queryPermission({ mode: 'readwrite' })
+          const permission = await selectedFolder.queryPermission({
+            mode: 'readwrite',
+          })
           if (permission !== 'granted') {
-            const newPermission = await selectedFolder.requestPermission({ mode: 'readwrite' })
+            const newPermission = await selectedFolder.requestPermission({
+              mode: 'readwrite',
+            })
             if (newPermission !== 'granted') {
               console.warn('用户拒绝了文件夹权限，将使用默认下载方式')
               setError('文件夹权限被拒绝，将使用默认下载方式')
@@ -312,9 +309,13 @@ export default function VideoUrlProcessor() {
       if (selectedFolder && isFileSystemAccessSupported) {
         try {
           // 立即检查权限，确保在用户激活上下文中
-          const permission = await selectedFolder.queryPermission({ mode: 'readwrite' })
+          const permission = await selectedFolder.queryPermission({
+            mode: 'readwrite',
+          })
           if (permission !== 'granted') {
-            const newPermission = await selectedFolder.requestPermission({ mode: 'readwrite' })
+            const newPermission = await selectedFolder.requestPermission({
+              mode: 'readwrite',
+            })
             if (newPermission !== 'granted') {
               console.warn('用户拒绝了文件夹权限，将使用默认下载方式')
               setError('文件夹权限被拒绝，将使用默认下载方式')
@@ -346,9 +347,13 @@ export default function VideoUrlProcessor() {
       // 在用户激活上下文中检查权限
       if (selectedFolder && isFileSystemAccessSupported) {
         try {
-          const permission = await selectedFolder.queryPermission({ mode: 'readwrite' })
+          const permission = await selectedFolder.queryPermission({
+            mode: 'readwrite',
+          })
           if (permission !== 'granted') {
-            const newPermission = await selectedFolder.requestPermission({ mode: 'readwrite' })
+            const newPermission = await selectedFolder.requestPermission({
+              mode: 'readwrite',
+            })
             if (newPermission !== 'granted') {
               console.warn('用户拒绝了文件夹权限，将使用默认下载方式')
               setError('文件夹权限被拒绝，将使用默认下载方式')
@@ -528,124 +533,142 @@ export default function VideoUrlProcessor() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[120px]">封面</TableHead>
+                    <TableHead className='w-[120px]'>封面</TableHead>
                     <TableHead>视频名称</TableHead>
-                    <TableHead className="w-[120px]">状态</TableHead>
-                    <TableHead className="w-[200px]">下载进度</TableHead>
-                    <TableHead className="w-[200px]">操作</TableHead>
+                    <TableHead className='w-[120px]'>状态</TableHead>
+                    <TableHead className='w-[200px]'>下载进度</TableHead>
+                    <TableHead className='w-[200px]'>操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {results.map((video) => {
-                    const downloadItem = downloadProgress.find(p => p.id === video.id)
+                    const downloadItem = downloadProgress.find((p) => p.id === video.id)
                     const isDownloading = singleDownloading.has(video.id)
 
                     return (
                       <TableRow className={!video.success ? 'bg-red-50' : ''} key={video.id}>
                         <TableCell>
-                          <div className="relative w-20 h-12 rounded overflow-hidden">
+                          <div className='relative w-20 h-12 rounded overflow-hidden'>
                             <Image
                               alt={video.name}
-                              className="w-full h-full object-cover"
+                              className='w-full h-full object-cover'
                               fill
-                              src={video.cover || '/placeholder.svg'}
                               sizes='400'
+                              src={video.cover || '/placeholder.svg'}
                             />
                             {video.success && video.videoUrl && (
                               <a
-                                className="absolute inset-0 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 cursor-pointer"
+                                className='absolute inset-0 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 cursor-pointer'
                                 href={video.videoUrl}
-                                rel="noopener noreferrer"
-                                target="_blank"
-                                title="播放视频"
+                                rel='noopener noreferrer'
+                                target='_blank'
+                                title='播放视频'
                               >
-                                <Play className="text-white h-4 w-4 opacity-0 hover:opacity-100 transition-opacity" />
+                                <Play className='text-white h-4 w-4 opacity-0 hover:opacity-100 transition-opacity' />
                               </a>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="max-w-xs">
-                            <p className="font-medium text-sm line-clamp-2" title={video.name}>
+                          <div className='max-w-xs'>
+                            <p className='font-medium text-sm line-clamp-2' title={video.name}>
                               {video.name}
                             </p>
                             {!video.success && video.error && (
-                              <p className="text-xs text-red-600 mt-1">{video.error}</p>
+                              <p className='text-xs text-red-600 mt-1'>{video.error}</p>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
                           {!video.success ? (
-                            <Badge variant="destructive">获取失败</Badge>
+                            <Badge variant='destructive'>获取失败</Badge>
                           ) : downloadItem ? (
                             <Badge
                               variant={
-                                downloadItem.status === 'completed' ? 'default' :
-                                downloadItem.status === 'failed' ? 'destructive' :
-                                downloadItem.status === 'downloading' ? 'secondary' : 'outline'
+                                downloadItem.status === 'completed'
+                                  ? 'default'
+                                  : downloadItem.status === 'failed'
+                                    ? 'destructive'
+                                    : downloadItem.status === 'downloading'
+                                      ? 'secondary'
+                                      : 'outline'
                               }
                             >
-                              {downloadItem.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
-                              {downloadItem.status === 'failed' && <XCircle className="w-3 h-3 mr-1" />}
-                              {downloadItem.status === 'downloading' && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
-                              {downloadItem.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
-                              {downloadItem.status === 'completed' ? '已完成' :
-                               downloadItem.status === 'failed' ? '下载失败' :
-                               downloadItem.status === 'downloading' ? '下载中' : '等待中'}
+                              {downloadItem.status === 'completed' && (
+                                <CheckCircle className='w-3 h-3 mr-1' />
+                              )}
+                              {downloadItem.status === 'failed' && (
+                                <XCircle className='w-3 h-3 mr-1' />
+                              )}
+                              {downloadItem.status === 'downloading' && (
+                                <Loader2 className='w-3 h-3 mr-1 animate-spin' />
+                              )}
+                              {downloadItem.status === 'pending' && (
+                                <Clock className='w-3 h-3 mr-1' />
+                              )}
+                              {downloadItem.status === 'completed'
+                                ? '已完成'
+                                : downloadItem.status === 'failed'
+                                  ? '下载失败'
+                                  : downloadItem.status === 'downloading'
+                                    ? '下载中'
+                                    : '等待中'}
                             </Badge>
                           ) : (
-                            <Badge variant="outline">未下载</Badge>
+                            <Badge variant='outline'>未下载</Badge>
                           )}
                         </TableCell>
                         <TableCell>
                           {downloadItem && downloadItem.status === 'downloading' && (
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-xs">
+                            <div className='space-y-1'>
+                              <div className='flex justify-between text-xs'>
                                 <span>进度</span>
                                 <span>{downloadItem.progress}%</span>
                               </div>
-                              <Progress className="h-2" value={downloadItem.progress} />
+                              <Progress className='h-2' value={downloadItem.progress} />
                             </div>
                           )}
-                          {downloadItem && downloadItem.status === 'failed' && downloadItem.error && (
-                            <p className="text-xs text-red-600">{downloadItem.error}</p>
-                          )}
+                          {downloadItem &&
+                            downloadItem.status === 'failed' &&
+                            downloadItem.error && (
+                              <p className='text-xs text-red-600'>{downloadItem.error}</p>
+                            )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className='flex gap-2'>
                             {!video.success ? (
-                              <Button disabled size="sm" variant="outline">
+                              <Button disabled size='sm' variant='outline'>
                                 无法下载
                               </Button>
                             ) : downloadItem && downloadItem.status === 'failed' ? (
                               <Button
                                 disabled={isDownloading}
                                 onClick={() => handleRetryDownload(video)}
-                                size="sm"
-                                variant="outline"
+                                size='sm'
+                                variant='outline'
                               >
-                                <RotateCcw className="w-3 h-3 mr-1" />
+                                <RotateCcw className='w-3 h-3 mr-1' />
                                 重试
                               </Button>
                             ) : (
                               <Button
                                 disabled={isDownloading || downloadItem?.status === 'downloading'}
                                 onClick={() => handleSingleDownload(video)}
-                                size="sm"
+                                size='sm'
                               >
                                 {isDownloading || downloadItem?.status === 'downloading' ? (
                                   <>
-                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                    <Loader2 className='w-3 h-3 mr-1 animate-spin' />
                                     下载中
                                   </>
                                 ) : downloadItem?.status === 'completed' ? (
                                   <>
-                                    <Download className="w-3 h-3 mr-1" />
+                                    <Download className='w-3 h-3 mr-1' />
                                     重新下载
                                   </>
                                 ) : (
                                   <>
-                                    <Download className="w-3 h-3 mr-1" />
+                                    <Download className='w-3 h-3 mr-1' />
                                     下载
                                   </>
                                 )}
@@ -661,8 +684,6 @@ export default function VideoUrlProcessor() {
             </Card>
           </div>
         )}
-
-
       </div>
     </div>
   )
