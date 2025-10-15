@@ -261,4 +261,27 @@ export class VideoDownloader {
     this.downloadQueue = []
     this.notifyProgress()
   }
+
+  // 重新下载失败的视频
+  async retryDownload(videoId: string, videoUrl: string, fileName: string): Promise<boolean> {
+    const item = this.downloadQueue.find((item) => item.id === videoId)
+    if (!item) {
+      return false
+    }
+
+    // 重置状态
+    item.status = 'pending'
+    item.progress = 0
+    item.error = undefined
+    this.notifyProgress()
+
+    // 重新下载
+    return await this.downloadVideo(videoUrl, fileName, videoId)
+  }
+
+  // 移除下载项
+  removeDownloadItem(videoId: string) {
+    this.downloadQueue = this.downloadQueue.filter((item) => item.id !== videoId)
+    this.notifyProgress()
+  }
 }
