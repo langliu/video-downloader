@@ -96,13 +96,20 @@ export default function VideoUrlProcessor() {
   }
 
   // 模拟API调用
-  const fetchVideoInfo = async (url: string): Promise<VideoInfo> => {
+  const fetchVideoInfo = async (
+    urls: string[],
+  ): Promise<{
+    data: VideoInfo[]
+    failureCount: number
+    successCount: number
+    totalCount: number
+  }> => {
     try {
       // 这里需要替换为您的实际API地址
       const apiUrl = '/api/video/info' // 或者您的实际API地址
 
       const response = await fetch(apiUrl, {
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ links: urls }),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -113,30 +120,13 @@ export default function VideoUrlProcessor() {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const result: ApiResponse = await response.json()
-
-      // 检查业务状态码
-      if (result.code !== '0001') {
-        throw new Error(result.message || '获取视频信息失败')
-      }
-
-      const videoId = Math.random().toString(36).substring(2, 11)
+      return await response.json()
+    } catch {
       return {
-        cover: result.data.cover,
-        id: videoId,
-        name: result.data.desc || '未知视频',
-        success: true,
-        videoUrl: result.data.playAddr,
-      }
-    } catch (error) {
-      const videoId = Math.random().toString(36).substring(2, 11)
-      return {
-        cover: '/placeholder.svg?height=180&width=320',
-        error: error instanceof Error ? error.message : '未知错误',
-        id: videoId,
-        name: '获取失败',
-        success: false,
-        videoUrl: '',
+        data: [],
+        failureCount: 0,
+        successCount: 0,
+        totalCount: 0,
       }
     }
   }
@@ -230,14 +220,14 @@ export default function VideoUrlProcessor() {
 
     try {
       // 并发调用所有URL的接口
-      const promises = urlList.map((url) => fetchVideoInfo(url))
-      const videoInfos = await Promise.all(promises)
+      const videoInfos = await fetchVideoInfo(urlList)
+      const data = videoInfos.data.map((info) => ({ ...info, success: true }))
 
       // 分离成功和失败的结果
-      const successCount = videoInfos.filter((v) => v.success).length
-      const failCount = videoInfos.length - successCount
+      const successCount = data
+      const failCount = videoInfos.failureCount
 
-      setResults(videoInfos)
+      setResults(data)
 
       // 保存到缓存
       saveToCache(urls)
@@ -459,57 +449,55 @@ export default function VideoUrlProcessor() {
               <h2 className='text-2xl font-semibold text-gray-900'>
                 视频信息结果 ({results.length})
               </h2>
-              {successfulVideos.length > 0 && (
-                <div className='flex items-center gap-2'>
-                  {/* 下载位置选择按钮 */}
-                  <Button
-                    className={`${
-                      !isFileSystemAccessSupported
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : folderName
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                    disabled={
-                      !isFileSystemAccessSupported ||
-                      downloadProgress.some((p) => p.status === 'downloading')
-                    }
-                    onClick={selectFolder}
-                    size='sm'
-                    title={folderName ? `当前选择: ${folderName}` : '选择下载文件夹'}
-                  >
-                    <FolderOpen className='mr-2 h-4 w-4' />
-                    {folderName ? folderName : '选择文件夹'}
-                  </Button>
+              <div className='flex items-center gap-2'>
+                {/* 下载位置选择按钮 */}
+                <Button
+                  className={`${
+                    !isFileSystemAccessSupported
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : folderName
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  disabled={
+                    !isFileSystemAccessSupported ||
+                    downloadProgress.some((p) => p.status === 'downloading')
+                  }
+                  onClick={selectFolder}
+                  size='sm'
+                  title={folderName ? `当前选择: ${folderName}` : '选择下载文件夹'}
+                >
+                  <FolderOpen className='mr-2 h-4 w-4' />
+                  {folderName ? folderName : '选择文件夹'}
+                </Button>
 
-                  {/* 清除文件夹选择按钮 */}
-                  {folderName && (
-                    <Button
-                      className='bg-gray-200 hover:bg-gray-300 text-gray-600'
-                      disabled={downloadProgress.some((p) => p.status === 'downloading')}
-                      onClick={() => {
-                        setSelectedFolder(null)
-                        setFolderName('')
-                        setError('')
-                      }}
-                      size='sm'
-                      title='清除文件夹选择'
-                    >
-                      <X className='h-4 w-4' />
-                    </Button>
-                  )}
-
-                  {/* 批量下载按钮 */}
+                {/* 清除文件夹选择按钮 */}
+                {folderName && (
                   <Button
-                    className='bg-green-600 hover:bg-green-700 text-white'
+                    className='bg-gray-200 hover:bg-gray-300 text-gray-600'
                     disabled={downloadProgress.some((p) => p.status === 'downloading')}
-                    onClick={handleBatchDownload}
+                    onClick={() => {
+                      setSelectedFolder(null)
+                      setFolderName('')
+                      setError('')
+                    }}
+                    size='sm'
+                    title='清除文件夹选择'
                   >
-                    <DownloadCloud className='mr-2 h-4 w-4' />
-                    批量下载 ({successfulVideos.length} 个视频)
+                    <X className='h-4 w-4' />
                   </Button>
-                </div>
-              )}
+                )}
+
+                {/* 批量下载按钮 */}
+                <Button
+                  className='bg-green-600 hover:bg-green-700 text-white'
+                  disabled={downloadProgress.some((p) => p.status === 'downloading')}
+                  onClick={handleBatchDownload}
+                >
+                  <DownloadCloud className='mr-2 h-4 w-4' />
+                  批量下载 ({successfulVideos.length} 个视频)
+                </Button>
+              </div>
             </div>
 
             {/* 下载位置提示 */}
