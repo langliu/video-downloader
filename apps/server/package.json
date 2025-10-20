@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/zod": "catalog:",
+    "@video-downloader/api": "workspace:*",
+    "@video-downloader/auth": "workspace:*",
+    "@video-downloader/db": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "hono": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.0",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "wrangler": "^4.43.0"
+  },
+  "main": "src/index.ts",
+  "name": "server",
+  "scripts": {
+    "build": "wrangler deploy --dry-run",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "check-types": "tsc -b",
+    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+    "db:local": "wrangler d1 migrations apply video-downloader --local",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev --port=3000",
+    "start": "wrangler dev"
+  },
+  "type": "module"
+}

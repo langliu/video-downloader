@@ -1,0 +1,13 @@
+{
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "breakpoints": true,
+      "idx": 0,
+      "tag": "0000_skinny_lily_hollister",
+      "version": "6",
+      "when": 1760979340677
+    }
+  ],
+  "version": "7"
+}

@@ -1,0 +1,35 @@
+{
+  "dependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/zod": "catalog:",
+    "@video-downloader/auth": "workspace:*",
+    "@video-downloader/db": "workspace:*",
+    "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "hono": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "default": "./src/index.ts",
+      "types": "./dist/index.d.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "name": "@video-downloader/api",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "type": "module"
+}

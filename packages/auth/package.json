@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "@polar-sh/better-auth": "catalog:",
+    "@polar-sh/sdk": "^0.34.16",
+    "@video-downloader/db": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "default": "./src/index.ts",
+      "types": "./dist/index.d.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "name": "@video-downloader/auth",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "type": "module"
+}
