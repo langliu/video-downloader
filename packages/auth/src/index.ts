@@ -57,5 +57,5 @@ export const auth = betterAuth({
   //   },
   // },
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',') : [],,
+  trustedOrigins: env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',') : [],
 })

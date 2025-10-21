@@ -5,10 +5,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.6",
-    "@types/node": "^24.9.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.5",
-    "tsdown": "^0.15.9",
     "turbo": "^2.5.8"
   },
   "lint-staged": {
@@ -28,7 +26,6 @@
     "db:push": "turbo -F @video-downloader/db db:push",
     "db:studio": "turbo -F @video-downloader/db db:studio",
     "dev": "turbo dev",
-    "dev:native": "turbo -F native dev",
     "dev:server": "turbo -F server dev",
     "dev:web": "turbo -F web dev",
     "format": "biome check --write .",
@@ -37,18 +34,19 @@
   "type": "module",
   "workspaces": {
     "catalog": {
-      "@orpc/client": "^1.9.0",
-      "@orpc/openapi": "^1.9.0",
-      "@orpc/server": "^1.9.0",
-      "@orpc/zod": "^1.9.0",
-      "@polar-sh/better-auth": "^1.1.3",
-      "better-auth": "^1.3.13",
-      "dotenv": "^17.2.2",
-      "drizzle-orm": "^0.44.2",
-      "hono": "^4.8.2",
-      "tsdown": "^0.15.5",
-      "typescript": "^5.8.2",
-      "zod": "^4.1.11"
+      "@orpc/client": "^1.10.0",
+      "@orpc/openapi": "^1.10.0",
+      "@orpc/server": "^1.10.0",
+      "@orpc/zod": "^1.10.0",
+      "@polar-sh/better-auth": "^1.1.9",
+      "@types/node": "^24.9.1",
+      "better-auth": "^1.3.28",
+      "dotenv": "^17.2.3",
+      "drizzle-orm": "^0.44.6",
+      "hono": "^4.10.1",
+      "tsdown": "^0.15.9",
+      "typescript": "^5.9.3",
+      "zod": "^4.1.12"
     },
     "packages": [
       "apps/*",

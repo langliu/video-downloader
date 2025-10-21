@@ -28,9 +28,6 @@
     "dev": {
       "cache": false,
       "persistent": true
-    },
-    "lint": {
-      "dependsOn": ["^lint"]
     }
   },
   "ui": "tui"

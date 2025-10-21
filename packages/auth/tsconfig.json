@@ -4,7 +4,8 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "types": ["../../apps/server/worker-configuration.d.ts"]
   },
   "extends": "../../tsconfig.base.json"
 }
