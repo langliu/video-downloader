@@ -2,11 +2,11 @@ import { env } from 'cloudflare:workers'
 import { checkout, polar, portal } from '@polar-sh/better-auth'
 import { db } from '@video-downloader/db'
 import * as schema from '@video-downloader/db/schema/auth'
-import { betterAuth } from 'better-auth'
+import { type Auth, betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { polarClient } from './lib/payments'
 
-export const auth = betterAuth({
+export const auth: Auth = betterAuth({
   advanced: {
     defaultCookieAttributes: {
       httpOnly: true,
@@ -49,6 +49,8 @@ export const auth = betterAuth({
       ],
     }),
   ],
+  secret: env.BETTER_AUTH_SECRET,
+  trustedOrigins: env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',') : [],
   // uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
   // session: {
   //   cookieCache: {
@@ -56,6 +58,4 @@ export const auth = betterAuth({
   //     maxAge: 60,
   //   },
   // },
-  secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',') : [],
 })

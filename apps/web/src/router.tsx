@@ -6,7 +6,7 @@ import { routeTree } from './routeTree.gen'
 import { orpc, queryClient } from './utils/orpc'
 
 export const getRouter = () => {
-  const router = createTanStackRouter({
+  return createTanStackRouter({
     context: { orpc, queryClient },
     defaultNotFoundComponent: () => <div>Not Found</div>,
     defaultPendingComponent: () => <Loader />,
@@ -17,7 +17,6 @@ export const getRouter = () => {
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     ),
   })
-  return router
 }
 
 declare module '@tanstack/react-router' {

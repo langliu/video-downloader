@@ -38,7 +38,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         name: 'viewport',
       },
       {
-        title: 'My App',
+        title: '花花的工具箱',
+      },
+      {
+        content: '花花的工具箱（私人定制）',
+        name: 'description',
       },
     ],
   }),

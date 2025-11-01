@@ -1,8 +1,8 @@
 {
-	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "video-downloader",
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "video-downloader",
 	"main": "@tanstack/react-start/server-entry",
-	"compatibility_date": "2025-07-05",
+	"compatibility_date": "2025-10-11",
 	"compatibility_flags": ["nodejs_compat"],
 	"assets": {
 		"directory": ".output/public"
