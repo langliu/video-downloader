@@ -1,8 +1,11 @@
 {
   "cSpell.words": [
+    "bullmq",
     "libsql",
     "orpc",
-    "turborepo"
+    "turborepo",
+    "volcengine",
+    "volces"
   ],
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
