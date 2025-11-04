@@ -1,15 +1,17 @@
 {
   "dependencies": {
-    "@volcengine/tos-sdk": "^2.7.5",
+    "ali-oss": "^6.23.0",
     "bullmq": "^5.63.0",
     "hono": "^4.10.4",
     "ioredis": "^5.8.2"
   },
   "devDependencies": {
+    "@types/ali-oss": "^6.16.11",
     "@types/bun": "latest"
   },
   "name": "backend",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "test:oss": "bun run test-oss.ts"
   }
 }

@@ -1,27 +1,18 @@
-import { DataTransferType, TosClient } from '@volcengine/tos-sdk'
+import { default as OSS } from 'ali-oss'
 import type { Job } from 'bullmq'
-import {} from 'bun'
 
 // 配置通过环境变量注入
-const TOS_ACCESS_KEY = process.env['TOS_ACCESS_KEY'] || ''
-const TOS_SECRET_KEY = process.env['TOS_SECRET_KEY'] || ''
-const TOS_ENDPOINT = process.env['TOS_ENDPOINT'] || 'tos-cn-beijing.volces.com'
-const TOS_REGION = process.env['TOS_REGION'] || 'cn-beijing'
-const TOS_BUCKET = process.env['TOS_BUCKET'] || 'anhuahua'
+const OSS_ACCESS_KEY = process.env['OSS_ACCESS_KEY'] || ''
+const OSS_SECRET_KEY = process.env['OSS_SECRET_KEY'] || ''
+const OSS_REGION = process.env['OSS_REGION'] || ''
+const OSS_BUCKET = process.env['OSS_BUCKET'] || ''
 
-const client = new TosClient({
-  accessKeyId: TOS_ACCESS_KEY,
-  accessKeySecret: TOS_SECRET_KEY,
-  endpoint: TOS_ENDPOINT,
-  region: TOS_REGION,
+const client = new OSS({
+  accessKeyId: OSS_ACCESS_KEY,
+  accessKeySecret: OSS_SECRET_KEY,
+  bucket: OSS_BUCKET,
+  region: OSS_REGION,
 })
-
-// Minimal local typing for putObject input to avoid depending on SDK types in this file
-type PutObjectInput = {
-  Bucket: string
-  Key: string
-  Body: Uint8Array | ArrayBuffer | unknown
-}
 
 export type VideoInfo = {
   /** 视频地址 */
@@ -72,15 +63,15 @@ export async function jobProcessor(job: Job<{ url: string }>) {
     const res = await getVideoInfo(url)
 
     console.log('视频解析成功', job.id, res)
-    // 解析成功后，如果有播放地址则抓取并上传到 TOS
+    // 解析成功后，如果有播放地址则抓取并上传到 OSS
     if (res?.playAddr) {
       const remoteUrl = res.playAddr
       const key = `${res.desc}.mp4`
       try {
-        const r = await uploadToTOS(remoteUrl, key)
-        console.log('上传到 TOS 成功', r)
+        const r = await uploadToOSS(remoteUrl, key)
+        console.log('上传到 OSS 成功', r)
       } catch (err) {
-        console.error('上传到 TOS 失败', err)
+        console.error('上传到 OSS 失败', err)
         throw err
       }
     }
@@ -92,11 +83,11 @@ export async function jobProcessor(job: Job<{ url: string }>) {
   }
 }
 
-async function uploadToTOS(remoteUrl: string, key: string) {
-  if (!TOS_BUCKET) {
-    throw new Error('TOS_BUCKET 未配置')
+async function uploadToOSS(remoteUrl: string, key: string) {
+  if (!OSS_BUCKET) {
+    throw new Error('OSS_BUCKET 未配置')
   }
-  console.log('开始上传到 TOS')
+  console.log('开始上传到 OSS')
   const resp = await fetch(remoteUrl)
   if (!resp.ok) {
     throw new Error(
@@ -107,43 +98,21 @@ async function uploadToTOS(remoteUrl: string, key: string) {
   const ab = await resp.arrayBuffer()
   console.log('fetch remote video success', remoteUrl)
   await Bun.write(key, ab)
-  try {
-    client
-      .putObject({
-        body: Buffer.from(ab),
-        bucket: TOS_BUCKET,
-        dataTransferStatusChange: (event) => {
-          if (event.type === DataTransferType.Started) {
-            console.log('Data Transfer Started')
-          } else if (event.type === DataTransferType.Rw) {
-            const percent = (
-              (event.consumedBytes / event.totalBytes) *
-              100
-            ).toFixed(2)
-            console.log(
-              `Once Read:${event.rwOnceBytes},ConsumerBytes/TotalBytes: ${event.consumedBytes}/${event.totalBytes},${percent}%`,
-            )
-          } else if (event.type === DataTransferType.Succeed) {
-            const percent = (
-              (event.consumedBytes / event.totalBytes) *
-              100
-            ).toFixed(2)
-            console.log(
-              `Data Transfer Succeed, ConsumerBytes/TotalBytes:${event.consumedBytes}/${event.totalBytes},${percent}%`,
-            )
-          } else if (event.type === DataTransferType.Failed) {
-            console.log('Data Transfer Failed')
-          }
-        },
-        key,
-      })
-      .then((result) => {
-        console.log('上传到 TOS 成功', result)
-      })
 
-    // return result
+  try {
+    // 使用阿里云 OSS SDK 上传文件
+    const result = await client.put(key, Buffer.from(ab), {
+      // 可选：设置进度回调
+      progress: (p: number) => {
+        const percent = (p * 100).toFixed(2)
+        console.log(`上传进度: ${percent}%`)
+      },
+    } as any)
+
+    console.log('上传到 OSS 成功', result)
+    return result
   } catch (error) {
-    console.error('上传到 TOS 失败', error)
+    console.error('上传到 OSS 失败', error)
     throw error
   }
 }
