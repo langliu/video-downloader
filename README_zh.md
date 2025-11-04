@@ -36,7 +36,7 @@ bun install
 
     ```shell
     bun db:generate
-    cd apps/server && wrangler d1 create video-downloader --local
+    cd apps/server && wrangler d1 migrations apply video-downloader --local
     ```
 
 2. 如需要，请在 `apps/server` 目录下更新你的 `.env` 文件中的连接详情。

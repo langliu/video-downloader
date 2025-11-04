@@ -8,17 +8,17 @@ import { polarClient } from './lib/payments'
 
 export const auth: Auth = betterAuth({
   advanced: {
+    // uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
+    // https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
+    crossSubDomainCookies: {
+      domain: 'video-downloader-server.anhuahua.xyz',
+      enabled: true,
+    },
     defaultCookieAttributes: {
       httpOnly: true,
       sameSite: 'none',
       secure: true,
     },
-    // uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
-    // https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
-    // crossSubDomainCookies: {
-    //   enabled: true,
-    //   domain: "<your-workers-subdomain>",
-    // },
   },
   baseURL: env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, {

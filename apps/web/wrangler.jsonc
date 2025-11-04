@@ -2,14 +2,20 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "video-downloader",
 	"main": "@tanstack/react-start/server-entry",
-	"compatibility_date": "2025-10-11",
+	"compatibility_date": "2025-10-15",
 	"compatibility_flags": ["nodejs_compat"],
 	"assets": {
 		"directory": ".output/public"
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+  "routes": [
+    {
+      "pattern": "video-downloader.anhuahua.xyz",
+      "custom_domain": true
+    }
+  ]
 	// "kv_namespaces": [
 	//   {
 	//     "binding": "CACHE",
