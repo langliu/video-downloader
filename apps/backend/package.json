@@ -2,15 +2,20 @@
   "dependencies": {
     "ali-oss": "^6.23.0",
     "bullmq": "^5.63.0",
+    "drizzle-orm": "^0.44.7",
     "hono": "^4.10.4",
-    "ioredis": "^5.8.2"
+    "ioredis": "^5.8.2",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/ali-oss": "^6.16.11",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/pg": "^8.15.6",
+    "drizzle-kit": "^0.31.6"
   },
   "name": "backend",
   "scripts": {
+    "db:push": "drizzle-kit push",
     "dev": "bun run --hot src/index.ts",
     "test:oss": "bun run test-oss.ts"
   }

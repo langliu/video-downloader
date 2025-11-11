@@ -1,5 +1,7 @@
 import { default as OSS } from 'ali-oss'
 import type { Job } from 'bullmq'
+import { db } from '../db'
+import { videosTable } from '../db/schema/video'
 
 // 配置通过环境变量注入
 const OSS_ACCESS_KEY = process.env['OSS_ACCESS_KEY'] || ''
@@ -42,9 +44,7 @@ async function getVideoInfo(url: string): Promise<VideoInfo> {
 
   const response = await fetch(backendApiUrl, {
     body: params,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     method: 'POST',
   })
   const data = await response.json()
@@ -69,6 +69,16 @@ export async function jobProcessor(job: Job<{ url: string }>) {
       const key = `${res.desc}.mp4`
       try {
         const r = await uploadToOSS(remoteUrl, key)
+        console.log({
+          link: url,
+          name: res.desc,
+          ossKey: r.name,
+        })
+        await db.insert(videosTable).values({
+          link: url,
+          name: res.desc,
+          ossKey: r.name,
+        })
         console.log('上传到 OSS 成功', r)
       } catch (err) {
         console.error('上传到 OSS 失败', err)
@@ -107,7 +117,7 @@ async function uploadToOSS(remoteUrl: string, key: string) {
         const percent = (p * 100).toFixed(2)
         console.log(`上传进度: ${percent}%`)
       },
-    } as any)
+    })
 
     console.log('上传到 OSS 成功', result)
     return result
