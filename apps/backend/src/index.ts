@@ -64,4 +64,11 @@ worker.on('failed', (job, err) => {
   console.log(`${job?.id} has failed with ${err.message}`)
 })
 
-export default app
+const port = Number.parseInt(process.env.PORT || '3000', 10)
+
+Bun.serve({
+  fetch: app.fetch,
+  port,
+})
+
+console.log(`Bun server running on http://localhost:${port}`)
