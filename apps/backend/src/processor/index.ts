@@ -71,6 +71,9 @@ export async function jobProcessor(job: Job<{ url: string }>) {
       console.log('链接已存在，跳过', url)
       return
     }
+    if (!url) {
+      return
+    }
     const res = await getVideoInfo(url)
 
     console.log('视频解析成功', job.id, res)
