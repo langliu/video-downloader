@@ -1,5 +1,6 @@
 import { default as OSS } from 'ali-oss'
 import type { Job } from 'bullmq'
+import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { videosTable } from '../db/schema/video'
 
@@ -60,6 +61,16 @@ export async function jobProcessor(job: Job<{ url: string }>) {
   try {
     console.log('Processing job', job.id, job.data)
     const { url } = job.data
+    const exists = await db
+      .select({ id: videosTable.id })
+      .from(videosTable)
+      .where(eq(videosTable.link, url))
+      .limit(1)
+
+    if (exists.length > 0) {
+      console.log('链接已存在，跳过', url)
+      return
+    }
     const res = await getVideoInfo(url)
 
     console.log('视频解析成功', job.id, res)
@@ -104,19 +115,13 @@ async function uploadToOSS(remoteUrl: string, key: string) {
       `fetch remote video failed: ${resp.status} ${resp.statusText}`,
     )
   }
-
   const ab = await resp.arrayBuffer()
-  console.log('fetch remote video success', remoteUrl)
-  await Bun.write(key, ab)
 
   try {
     // 使用阿里云 OSS SDK 上传文件
     const result = await client.put(key, Buffer.from(ab), {
-      // 可选：设置进度回调
-      progress: (p: number) => {
-        const percent = (p * 100).toFixed(2)
-        console.log(`上传进度: ${percent}%`)
-      },
+      // 可选：设置超时时间为 60 秒
+      timeout: 60 * 1000,
     })
 
     console.log('上传到 OSS 成功', result)

@@ -1,10 +1,12 @@
 import { Queue, Worker } from 'bullmq'
 import { redis } from 'bun'
 import { Hono } from 'hono'
+import { logger } from 'hono/logger'
 import IORedis from 'ioredis'
 import { jobProcessor } from './processor'
 
 const app = new Hono()
+app.use(logger())
 
 const connection = new IORedis({ maxRetriesPerRequest: null })
 
@@ -15,7 +17,7 @@ app.get('/', async (c) => {
 
   // 添加作业时设置重试选项
   const jobOptions = {
-    attempts: 10, // 最大重试次数（包括第一次尝试）
+    attempts: 3, // 最大重试次数（包括第一次尝试）
     backoff: {
       delay: 1000, // 初始延迟 1 秒
       type: 'exponential',
