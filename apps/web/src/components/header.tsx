@@ -6,6 +6,8 @@ export default function Header() {
     { label: 'Home', to: '/' },
     { label: 'Dashboard', to: '/dashboard' },
     { label: 'Todos', to: '/todos' },
+    { label: 'Video Upload', to: '/video-upload' },
+    { label: 'Video List', to: '/videos' },
   ] as const
 
   return (

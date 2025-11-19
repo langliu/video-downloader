@@ -1,12 +1,39 @@
+import OSS from 'ali-oss'
 import { Queue, Worker } from 'bullmq'
 import { redis } from 'bun'
+import { desc, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import IORedis from 'ioredis'
+import { db } from './db'
+import { videosTable } from './db/schema/video'
 import { jobProcessor } from './processor'
+
+const OSS_ACCESS_KEY = process.env['OSS_ACCESS_KEY'] || ''
+const OSS_SECRET_KEY = process.env['OSS_SECRET_KEY'] || ''
+const OSS_REGION = process.env['OSS_REGION'] || ''
+const OSS_BUCKET = process.env['OSS_BUCKET'] || ''
+
+const ossClient = new OSS({
+  accessKeyId: OSS_ACCESS_KEY,
+  accessKeySecret: OSS_SECRET_KEY,
+  bucket: OSS_BUCKET,
+  region: OSS_REGION,
+})
 
 const app = new Hono()
 app.use(logger())
+const CORS_ORIGIN = process.env['CORS_ORIGIN'] || 'http://localhost:3001'
+app.use(
+  '*',
+  cors({
+    allowHeaders: ['Content-Type', 'Authorization'],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    origin: CORS_ORIGIN,
+  }),
+)
 
 const connection = new IORedis({ maxRetriesPerRequest: null })
 
@@ -36,6 +63,39 @@ app.post('video-saves', async (c) => {
   )
   return c.json({
     body,
+  })
+})
+
+app.get('/api/videos', async (c) => {
+  const page = Number.parseInt(c.req.query('page') ?? '1', 10) || 1
+  const pageSize = Number.parseInt(c.req.query('pageSize') ?? '10', 10) || 10
+  const p = Math.max(1, page)
+  const ps = Math.min(100, Math.max(1, pageSize))
+  const offset = (p - 1) * ps
+
+  const items = await db
+    .select()
+    .from(videosTable)
+    .orderBy(desc(videosTable.createAt))
+    .limit(ps)
+    .offset(offset)
+
+  const itemsWithUrl = items.map((it) => ({
+    ...it,
+    signedUrl: ossClient.signatureUrl(it.ossKey, { expires: 3600 }),
+  }))
+
+  const totalRow = await db
+    .select({ value: sql<string>`count(*)` })
+    .from(videosTable)
+  const total = Number.parseInt(totalRow[0]?.value ?? '0', 10)
+
+  return c.json({
+    items: itemsWithUrl,
+    page: p,
+    pageSize: ps,
+    total,
+    totalPages: Math.ceil(total / ps),
   })
 })
 
