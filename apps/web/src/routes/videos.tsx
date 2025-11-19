@@ -93,7 +93,6 @@ function RouteComponent() {
                 <video
                   className='absolute inset-0 h-full w-full object-cover'
                   controls={false}
-                  muted
                   onEnded={() => {
                     if (currentPlayingId === it.id) setCurrentPlayingId(null)
                   }}
@@ -145,6 +144,8 @@ function RouteComponent() {
                         Object.entries(videoRefs.current).forEach(([id, v]) => {
                           if (id !== it.id && v) v.pause()
                         })
+                        el.muted = false
+                        el.volume = 1
                         el.play()
                         setCurrentPlayingId(it.id)
                       } else {
