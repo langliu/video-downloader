@@ -68,7 +68,7 @@ app.post('video-saves', async (c) => {
 
 app.get('/api/videos', async (c) => {
   const page = Number.parseInt(c.req.query('page') ?? '1', 10) || 1
-  const pageSize = Number.parseInt(c.req.query('pageSize') ?? '10', 10) || 10
+  const pageSize = Number.parseInt(c.req.query('pageSize') ?? '12', 10) || 12
   const p = Math.max(1, page)
   const ps = Math.min(100, Math.max(1, pageSize))
   const offset = (p - 1) * ps

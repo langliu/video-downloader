@@ -28,6 +28,9 @@ function RouteComponent() {
       if (!resp.ok) throw new Error('提交失败')
       return resp.json()
     },
+    onSuccess: () => {
+      setText('')
+    },
   })
 
   return (
