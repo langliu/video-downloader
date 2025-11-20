@@ -109,7 +109,12 @@ app.get('/api/videos', async (c) => {
   })
 })
 
-const worker = new Worker('test', jobProcessor, { connection })
+const worker = new Worker('test', jobProcessor, {
+  connection,
+  // 最多重试 2 次后标记为 failed
+  maxStalledCount: 3,
+  stalledInterval: 30000,
+})
 
 worker.on('completed', (job) => {
   console.log(`${job?.id} has completed!`)
