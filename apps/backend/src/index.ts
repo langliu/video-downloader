@@ -1,8 +1,12 @@
+import { createBullBoard } from '@bull-board/api'
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
+import { HonoAdapter } from '@bull-board/hono'
 import OSS from 'ali-oss'
 import { Queue, Worker } from 'bullmq'
 import { redis } from 'bun'
 import { desc, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
+import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import IORedis from 'ioredis'
@@ -21,7 +25,12 @@ const ossClient = new OSS({
   bucket: OSS_BUCKET,
   region: OSS_REGION,
 })
-
+const serverAdapter = new HonoAdapter(serveStatic)
+createBullBoard({
+  queues: [new BullMQAdapter(new Queue('test'))],
+  serverAdapter,
+})
+serverAdapter.setBasePath('/bull-board')
 const app = new Hono()
 app.use(logger())
 const CORS_ORIGIN = process.env['CORS_ORIGIN'] || 'http://localhost:3001'
@@ -37,6 +46,7 @@ app.use(
 
 const connection = new IORedis({ maxRetriesPerRequest: null })
 
+app.route('/bull-board', serverAdapter.registerPlugin())
 app.get('/', async (c) => {
   await redis.set('key', 'value33')
   return c.text('Hello Hono!')
