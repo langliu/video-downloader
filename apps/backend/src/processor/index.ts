@@ -80,7 +80,7 @@ export async function jobProcessor(job: Job<{ url: string }>) {
     // 解析成功后，如果有播放地址则抓取并上传到 OSS
     if (res?.playAddr) {
       const remoteUrl = res.playAddr
-      const key = `${res.desc}.mp4`
+      const key = `${crypto.randomUUID()}.mp4`
       try {
         const r = await uploadToOSS(remoteUrl, key)
         console.log({

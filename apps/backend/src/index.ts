@@ -48,7 +48,6 @@ const connection = new IORedis({ maxRetriesPerRequest: null })
 
 app.route('/bull-board', serverAdapter.registerPlugin())
 app.get('/', async (c) => {
-  await redis.set('key', 'value33')
   return c.text('Hello Hono!')
 })
 
@@ -56,12 +55,12 @@ app.post('video-saves', async (c) => {
   const queue = new Queue('test')
   const body = await c.req.json()
   const jobOptions = {
-    attempts: 5, // 最大重试次数（包括第一次尝试）
+    attempts: 3, // 最大重试次数（包括第一次尝试）
     backoff: {
       delay: 1000, // 初始延迟 1 秒
       type: 'exponential',
     },
-    removeOnComplete: true, // 完成后删除作业
+    removeOnComplete: false, // 完成后删除作业
     removeOnFail: false, // 失败后保留作业以便查看
   }
   queue.addBulk(
