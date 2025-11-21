@@ -11,7 +11,7 @@ import IORedis from 'ioredis'
 import { db } from './db'
 import { videosTable } from './db/schema/video'
 import { jobProcessor } from './processor'
-import { ossClient } from './utils'
+import { customLogger, ossClient } from './utils'
 
 const serverAdapter = new HonoAdapter(serveStatic)
 createBullBoard({
@@ -20,7 +20,7 @@ createBullBoard({
 })
 serverAdapter.setBasePath('/bull-board')
 const app = new Hono()
-app.use(logger())
+app.use(logger(customLogger))
 const CORS_ORIGIN = process.env['CORS_ORIGIN'] || 'http://localhost:3001'
 app.use(
   '*',

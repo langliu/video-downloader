@@ -2,7 +2,7 @@ import type { Job } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { videosTable } from '../db/schema/video'
-import { ossClient } from '../utils'
+import { customLogger, ossClient } from '../utils'
 
 export type VideoInfo = {
   /** 视频地址 */
@@ -22,6 +22,7 @@ export type VideoInfo = {
  * @returns
  */
 async function getVideoInfo(url: string): Promise<VideoInfo> {
+  console.log('开始解析视频:', url)
   // 这里需要替换为您的实际后端API地址
   const backendApiUrl = 'https://proxy.layzz.cn/lyz/platAnalyse/'
 
@@ -38,8 +39,10 @@ async function getVideoInfo(url: string): Promise<VideoInfo> {
   const data = await response.json()
 
   if (!response.ok || data.code !== '0001') {
+    console.error('视频解析失败:', url, data)
     throw new Error(`解析失败：${url}`)
   }
+  console.log('视频解析成功:', url)
   return data.data
 }
 
@@ -59,6 +62,7 @@ export async function jobProcessor(job: Job<{ url: string }>) {
       return
     }
     if (!url) {
+      console.log('URL为空，跳过处理')
       return
     }
     const res = await getVideoInfo(url)
@@ -95,27 +99,29 @@ export async function jobProcessor(job: Job<{ url: string }>) {
 }
 
 async function uploadToOSS(remoteUrl: string, key: string) {
-  const OSS_BUCKET = process.env['OSS_BUCKET'] || ''
+  const OSS_BUCKET = process.env.OSS_BUCKET || ''
   if (!OSS_BUCKET) {
     throw new Error('OSS_BUCKET 未配置')
   }
-  console.log('开始上传到 OSS')
+  customLogger('开始获取视频数据:', key)
   const resp = await fetch(remoteUrl)
   if (!resp.ok) {
     throw new Error(
       `fetch remote video failed: ${resp.status} ${resp.statusText}`,
     )
   }
+  customLogger('获取视频成功:', remoteUrl)
   const ab = await resp.arrayBuffer()
 
   try {
+    customLogger('开始上传到 OSS:', key)
     // 使用阿里云 OSS SDK 上传文件
     const result = await ossClient.put(key, Buffer.from(ab))
 
-    console.log('上传到 OSS 成功', result)
+    customLogger('上传到 OSS 成功', result)
     return result
   } catch (error) {
-    console.error('上传到 OSS 失败', error)
+    customLogger('上传到 OSS 失败', error)
     throw error
   }
 }
