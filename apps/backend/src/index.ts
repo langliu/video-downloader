@@ -97,6 +97,7 @@ app.get('/api/videos', async (c) => {
 })
 
 const worker = new Worker('test', jobProcessor, {
+  concurrency: 5,
   connection,
   // 最多重试 2 次后标记为 failed
   maxStalledCount: 3,
