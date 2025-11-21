@@ -1,21 +1,8 @@
-import { default as OSS } from 'ali-oss'
 import type { Job } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { videosTable } from '../db/schema/video'
-
-// 配置通过环境变量注入
-const OSS_ACCESS_KEY = process.env['OSS_ACCESS_KEY'] || ''
-const OSS_SECRET_KEY = process.env['OSS_SECRET_KEY'] || ''
-const OSS_REGION = process.env['OSS_REGION'] || ''
-const OSS_BUCKET = process.env['OSS_BUCKET'] || ''
-
-const client = new OSS({
-  accessKeyId: OSS_ACCESS_KEY,
-  accessKeySecret: OSS_SECRET_KEY,
-  bucket: OSS_BUCKET,
-  region: OSS_REGION,
-})
+import { ossClient } from '../utils'
 
 export type VideoInfo = {
   /** 视频地址 */
@@ -108,6 +95,7 @@ export async function jobProcessor(job: Job<{ url: string }>) {
 }
 
 async function uploadToOSS(remoteUrl: string, key: string) {
+  const OSS_BUCKET = process.env['OSS_BUCKET'] || ''
   if (!OSS_BUCKET) {
     throw new Error('OSS_BUCKET 未配置')
   }
@@ -122,10 +110,7 @@ async function uploadToOSS(remoteUrl: string, key: string) {
 
   try {
     // 使用阿里云 OSS SDK 上传文件
-    const result = await client.put(key, Buffer.from(ab), {
-      // 可选：设置超时时间为 60 秒
-      timeout: 60 * 1000,
-    })
+    const result = await ossClient.put(key, Buffer.from(ab))
 
     console.log('上传到 OSS 成功', result)
     return result

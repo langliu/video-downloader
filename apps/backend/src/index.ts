@@ -1,9 +1,7 @@
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
 import { HonoAdapter } from '@bull-board/hono'
-import OSS from 'ali-oss'
 import { Queue, Worker } from 'bullmq'
-import { redis } from 'bun'
 import { desc, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
@@ -13,18 +11,8 @@ import IORedis from 'ioredis'
 import { db } from './db'
 import { videosTable } from './db/schema/video'
 import { jobProcessor } from './processor'
+import { ossClient } from './utils'
 
-const OSS_ACCESS_KEY = process.env['OSS_ACCESS_KEY'] || ''
-const OSS_SECRET_KEY = process.env['OSS_SECRET_KEY'] || ''
-const OSS_REGION = process.env['OSS_REGION'] || ''
-const OSS_BUCKET = process.env['OSS_BUCKET'] || ''
-
-const ossClient = new OSS({
-  accessKeyId: OSS_ACCESS_KEY,
-  accessKeySecret: OSS_SECRET_KEY,
-  bucket: OSS_BUCKET,
-  region: OSS_REGION,
-})
 const serverAdapter = new HonoAdapter(serveStatic)
 createBullBoard({
   queues: [new BullMQAdapter(new Queue('test'))],
