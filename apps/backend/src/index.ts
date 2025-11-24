@@ -36,12 +36,16 @@ const connection = new IORedis({ maxRetriesPerRequest: null })
 
 app.route('/bull-board', serverAdapter.registerPlugin())
 app.get('/', async (c) => {
+  customLogger('处理根路径请求')
   return c.text('Hello Hono!')
 })
 
 app.post('video-saves', async (c) => {
+  customLogger('开始处理视频保存请求')
   const queue = new Queue('test')
   const body = await c.req.json()
+  customLogger('接收到的视频链接:', body.urls)
+
   const jobOptions = {
     attempts: 3, // 最大重试次数（包括第一次尝试）
     backoff: {
@@ -58,12 +62,14 @@ app.post('video-saves', async (c) => {
       opts: jobOptions,
     })),
   )
+  customLogger('视频处理任务已添加到队列')
   return c.json({
     body,
   })
 })
 
 app.get('/api/videos', async (c) => {
+  customLogger('开始获取视频列表')
   const page = Number.parseInt(c.req.query('page') ?? '1', 10) || 1
   const pageSize = Number.parseInt(c.req.query('pageSize') ?? '12', 10) || 12
   const p = Math.max(1, page)
@@ -87,6 +93,7 @@ app.get('/api/videos', async (c) => {
     .from(videosTable)
   const total = Number.parseInt(totalRow[0]?.value ?? '0', 10)
 
+  customLogger(`返回视频列表，第${p}页，共${total}条记录`)
   return c.json({
     items: itemsWithUrl,
     page: p,
@@ -105,11 +112,11 @@ const worker = new Worker('test', jobProcessor, {
 })
 
 worker.on('completed', (job) => {
-  console.log(`${job?.id} has completed!`)
+  customLogger(`任务 ${job?.id} 处理完成`)
 })
 
 worker.on('failed', (job, err) => {
-  console.log(`${job?.id} has failed with ${err.message}`)
+  customLogger(`任务 ${job?.id} 处理失败，错误信息: ${err.message}`)
 })
 
 const port = Number.parseInt(process.env.PORT || '3000', 10)
@@ -119,4 +126,4 @@ Bun.serve({
   port,
 })
 
-console.log(`Bun server running on http://localhost:${port}`)
+customLogger(`服务启动在 http://localhost:${port}`)
